@@ -151,7 +151,7 @@ Permutation Parent1(const Permutation& v, uint8_t t, uint8_t n, const Permutatio
     }
 }
 
-// Function to save tree information (node, parent, level, children)
+// Function to save tree information (node, parent, children)
 void saveTreeInfo(uint8_t tree_index, const vector<Permutation>& all_permutations, uint8_t n, const Permutation& identity) {
     string filename = "tree" + to_string(tree_index) + ".txt";
     ofstream file(filename);
@@ -162,7 +162,7 @@ void saveTreeInfo(uint8_t tree_index, const vector<Permutation>& all_permutation
     }
     
     file << "Spanning Tree " << static_cast<int>(tree_index) << endl;
-    file << "Node\tParent\tLevel\tChildren" << endl;
+    file << "Node\tParent\tChildren" << endl;
     
     // Create a map from permutation to index for fast lookup
     unordered_map<Permutation, size_t> perm_to_index;
@@ -197,48 +197,13 @@ void saveTreeInfo(uint8_t tree_index, const vector<Permutation>& all_permutation
         }
     }
     
-    // Third pass: Calculate levels using BFS instead of DFS (more memory efficient)
-    vector<int> levels(all_permutations.size(), -1);
-    vector<size_t> queue;
-    
-    // Start with the root
-    queue.push_back(root_idx);
-    levels[root_idx] = 0;
-    
-    size_t queue_pos = 0;
-    while (queue_pos < queue.size()) {
-        size_t current = queue[queue_pos++];
-        int current_level = levels[current];
-        
-        // Process all children
-        for (size_t child : children[current]) {
-            levels[child] = current_level + 1;
-            queue.push_back(child);
-        }
-    }
-    
-    // Check if all nodes have a level assigned
-    bool all_levels_assigned = true;
-    for (size_t i = 0; i < levels.size(); i++) {
-        if (levels[i] == -1) {
-            all_levels_assigned = false;
-            break;
-            //cerr << "Warning: Node " << all_permutations[i].toString() << " not reachable from root!" << endl;
-        }
-    }
-    
-    if (!all_levels_assigned) {
-        cerr << "Tree " << static_cast<int>(tree_index) << " is not a valid spanning tree!" << endl;
-    }
-    
     // Write results to file
     for (size_t i = 0; i < all_permutations.size(); i++) {
         const Permutation& node = all_permutations[i];
         const Permutation& parent = all_permutations[parent_indices[i]];
         
         file << node.toString() << "\t"
-             << parent.toString() << "\t"
-             << levels[i] << "\t";
+             << parent.toString() << "\t";
         
         if (!children[i].empty()) {
             for (size_t j = 0; j < children[i].size(); j++) {
@@ -262,8 +227,8 @@ int main() {
     int input;
     cin >> input;
     
-    if (input <= 1 || input > 8) {
-        cout << "Please enter a value between 2 and 8. (Note: n > 8 will generate too many permutations)" << endl;
+    if (input <= 1 || input > 255) {
+        cout << "Please enter a value between 2 and 255." << endl;
         return 1;
     }
     
@@ -288,7 +253,7 @@ int main() {
     auto duration_permutation = duration_cast<milliseconds>(end_permutation - start_permutation);
     
     cout << "Total number of permutations (nodes): " << all_permutations.size() << endl;
-    cout << "Time to generate all permutations: " << duration_permutation.count() << " milliseconds" << endl;
+    cout << "Time to generate all permutations: " << fixed << setprecision(5) << duration_permutation.count() / 1000.0 << " seconds" << endl;
     
     // Create identity permutation once
     Permutation identity = Permutation::createIdentity(n);
@@ -308,14 +273,14 @@ int main() {
         auto tree_duration = duration_cast<milliseconds>(end_tree - start_tree);
         
         cout << "Time to generate Tree " << static_cast<int>(t) << ": " 
-             << tree_duration.count() << " milliseconds" << endl;
+             << fixed << setprecision(5) << tree_duration.count() / 1000.0 << " seconds" << endl;
     }
     
     // End measuring time for all trees calculation
     auto end_all_trees = high_resolution_clock::now();
     auto duration_all_trees = duration_cast<milliseconds>(end_all_trees - start_all_trees);
     
-    cout << "\nTotal time to generate all trees: " << duration_all_trees.count() << " milliseconds" << endl;
+    cout << "\nTotal time to generate all trees: " << fixed << setprecision(2) << duration_all_trees.count() / 1000.0 << " seconds" << endl;
     
     cout << "\nSuccessfully generated " << static_cast<int>(num_trees) << " independent spanning trees." << endl;
     
